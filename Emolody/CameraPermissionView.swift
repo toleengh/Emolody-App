@@ -4,24 +4,21 @@
 //
 //  Created by toleen alghamdi on 08/04/1447 AH.
 //
-
 import SwiftUI
 import AVFoundation
 
 struct CameraPermissionView: View {
     @ObservedObject var camera: CameraService
+    var onSkip: () -> Void = {}        // ← جديد
     @State private var showError = false
 
     var body: some View {
-        ZStack {
-            ScreenBackground()
-
+        ZStack { ScreenBackground()
             VStack(spacing: 28) {
                 Spacer().frame(height: 36)
 
                 ZStack {
-                    Circle()
-                        .fill(Brand.primary.opacity(0.18))
+                    Circle().fill(Brand.primary.opacity(0.18))
                         .frame(width: 160, height: 160)
                     Image(systemName: "camera.fill")
                         .font(.system(size: 60, weight: .bold))
@@ -60,8 +57,9 @@ struct CameraPermissionView: View {
                 .padding(.horizontal, 24)
                 .padding(.bottom, 8)
 
-                Button("Not Now") { }
-                    .font(.system(size: 15, weight: .medium))
+                // Not Now → يرجع للهوم
+                Button("Not Now") { onSkip() }
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Brand.textSecondary)
                     .padding(.bottom, 22)
             }

@@ -4,21 +4,23 @@
 //
 //  Created by toleen alghamdi on 14/04/1447 AH.
 //
-
 import SwiftUI
 import Combine
 
-/// يخزن بيانات المستخدم الأساسية (محفوظة محليًا)
 final class UserStore: ObservableObject {
     // اسم المستخدم
-    @AppStorage("user.name") var storedName: String = ""
+    @AppStorage("user.name") private var storedName: String = ""
     @Published var name: String = ""
 
-    // آخر مود محفوظ (لإظهار آخر نتيجة في Home)
-    @AppStorage("user.lastMood") var storedLastMood: String = ""
+    // رقم الهاتف
+    @AppStorage("user.phone") private var storedPhone: String = ""
+    @Published var phone: String = ""
+
+    // آخر مود محفوظ
+    @AppStorage("user.lastMood") private var storedLastMood: String = ""
     @Published var lastMood: String = ""
 
-    // التفضيلات الأساسية (أصناف + أنشطة)
+    // التفضيلات
     @AppStorage("user.genres") private var storedGenres: String = "" // CSV
     @Published var genres: Set<String> = []
 
@@ -26,8 +28,8 @@ final class UserStore: ObservableObject {
     @Published var activities: Set<String> = []
 
     init() {
-        // مزامنة من التخزين
         name = storedName
+        phone = storedPhone
         lastMood = storedLastMood
         genres = Set(storedGenres.split(separator: ",").map { String($0) })
         activities = Set(storedActivities.split(separator: ",").map { String($0) })
@@ -35,8 +37,18 @@ final class UserStore: ObservableObject {
 
     func save() {
         storedName = name
+        storedPhone = phone
         storedLastMood = lastMood
         storedGenres = genres.joined(separator: ",")
         storedActivities = activities.joined(separator: ",")
+    }
+
+    func clear() {
+        name = ""
+        phone = ""
+        lastMood = ""
+        genres.removeAll()
+        activities.removeAll()
+        save()
     }
 }

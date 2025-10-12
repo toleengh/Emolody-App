@@ -7,10 +7,12 @@ import SwiftUI
 
 @main
 struct EmolodyApp: App {
+    @AppStorage("isDarkMode") private var isDarkMode = false
+
     var body: some Scene {
         WindowGroup {
             RootView()
-                .preferredColorScheme(.light)
+                .preferredColorScheme(isDarkMode ? .dark : .light) // ← يفعّل الداكن/الفاتح
         }
     }
 }

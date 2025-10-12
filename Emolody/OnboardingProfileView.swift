@@ -1,19 +1,21 @@
 //
-//  PreferencesView.swift
+//  OnboardingProfileView.swift
 //  Emolody
 //
-//  Created by toleen alghamdi on 14/04/1447 AH.
+//  Created by toleen alghamdi on 20/04/1447 AH.
 //
 
 import SwiftUI
 
-/// شاشة اختيار التفضيلات للمستخدم الذي سجّل برقم الجوال.
-/// فيها "شرائح" قابلة للاختيار للأنواع والأنشطة.
-struct PreferencesView: View {
+/// صفحة واحدة تجمع: إدخال الاسم + اختيار الاهتمامات.
+/// بعد الحفظ تنتقلين للـ Home (Main Tabs).
+struct OnboardingProfileView: View {
     @ObservedObject var user: UserStore
     var onDone: () -> Void
 
-    // خيارات جاهزة (عدّليها بحرّية)
+    @State private var name: String = ""
+
+    // خيارات قابلة للتعديل
     private let allGenres = ["Pop", "Hip-Hop", "R&B", "EDM", "Chill", "Classical", "Rock", "Jazz"]
     private let allActivities = ["Workout", "Study", "Commute", "Relax", "Party", "Reading"]
 
@@ -24,11 +26,25 @@ struct PreferencesView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
 
-                    Text("Tell us what you like")
+                    Text("Complete your profile")
                         .font(.title2.bold())
                         .foregroundStyle(Brand.textPrimary)
 
-                    Group {
+                    // الاسم
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Your name")
+                            .font(.headline)
+                            .foregroundStyle(Brand.textPrimary)
+
+                        TextField("Enter your name", text: $name)
+                            .textInputAutocapitalization(.words)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                    }
+
+                    // الأنواع الموسيقية
+                    VStack(alignment: .leading, spacing: 10) {
                         Text("Favorite genres")
                             .font(.headline)
                             .foregroundStyle(Brand.textPrimary)
@@ -40,7 +56,8 @@ struct PreferencesView: View {
                         }
                     }
 
-                    Group {
+                    // الأنشطة
+                    VStack(alignment: .leading, spacing: 10) {
                         Text("Activities")
                             .font(.headline)
                             .foregroundStyle(Brand.textPrimary)
@@ -53,23 +70,26 @@ struct PreferencesView: View {
                     }
 
                     Button {
+                        user.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
                         user.save()
                         onDone()
                     } label: {
-                        Text("Continue")
+                        Text("Save & continue")
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(Brand.primary)
+                            .background(name.trimmingCharacters(in: .whitespaces).isEmpty ? Brand.primary.opacity(0.35) : Brand.primary)
                             .foregroundStyle(.white)
                             .cornerRadius(12)
                     }
-                    .padding(.top, 8)
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .padding(.top, 6)
                 }
                 .padding()
             }
         }
-        .navigationTitle("Preferences")
+        .onAppear { name = user.name }
+        .navigationTitle("Profile setup")
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -78,7 +98,7 @@ struct PreferencesView: View {
     }
 }
 
-/// شريحة اختيار بسيطة (Chip)
+// نفس الـ Chip والـ FlowWrap لكن داخل هذا الملف لتقليل عدد الملفات
 private struct SelectChip: View {
     let title: String
     let isSelected: Bool
@@ -103,16 +123,13 @@ private struct SelectChip: View {
     }
 }
 
-/// تخطيط التفاف تلقائي لعناصر كثيرة (chips)
 private struct FlowWrap<Data: RandomAccessCollection, Content: View, ID: Hashable>: View {
     var data: Data
     var id: KeyPath<Data.Element, ID>
     var content: (Data.Element) -> Content
 
     init(_ data: Data, id: KeyPath<Data.Element, ID>, @ViewBuilder content: @escaping (Data.Element) -> Content) {
-        self.data = data
-        self.id = id
-        self.content = content
+        self.data = data; self.id = id; self.content = content
     }
 
     var body: some View {
@@ -126,10 +143,7 @@ private struct FlowWrap<Data: RandomAccessCollection, Content: View, ID: Hashabl
                         .padding(.trailing, 8)
                         .padding(.bottom, 8)
                         .alignmentGuide(.leading) { d in
-                            if (abs(width - d.width) > geo.size.width) {
-                                width = 0
-                                height -= d.height
-                            }
+                            if (abs(width - d.width) > geo.size.width) { width = 0; height -= d.height }
                             let result = width
                             if item[keyPath: id] == data.last?[keyPath: id] { width = 0 } else { width -= d.width }
                             return result

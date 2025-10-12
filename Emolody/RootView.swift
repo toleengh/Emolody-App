@@ -8,38 +8,58 @@
 //  RootView.swift
 //  Emolody
 //
-import SwiftUI
-import Combine
-import AVFoundation
+//  RootView.swift
+//  Emolody
+//
 
+//
+//  RootView.swift
+//  Emolody
+//
+
+import SwiftUI
+import AVFoundation
+import Combine     // ← مهم لعلاقة ObservableObject/@Published
+
+// MARK: - Routes
 enum Route: Hashable {
     case splash
     case enterPhone
     case verifyPhone(number: String)
-    case preferences
-    case askName
+    case onboardingProfile         // اسم + اهتمامات (صفحة واحدة)
     case cameraPermission
     case moodDetection
     case mainTabs
     case playlist(mood: String)
-    case settings
+    case settings                  // اختياري
     case profile
 }
 
+// MARK: - Router
 final class AppRouter: ObservableObject {
     @Published var path = NavigationPath()
+
     func go(_ r: Route) { path.append(r) }
+
+    /// يبدّل المسار كله بالشاشة المعطاة (مفيد لمنع الرجوع)
+    func resetTo(_ r: Route) {
+        path = NavigationPath()
+        path.append(r)
+    }
+
     func pop() { if !path.isEmpty { path.removeLast() } }
     func popToRoot() { path.removeLast(path.count) }
 }
 
+// MARK: - RootView
 struct RootView: View {
     @StateObject private var router = AppRouter()
     @StateObject private var camera = CameraService()
-    @StateObject private var user = UserStore()
+    @StateObject private var user   = UserStore()
 
     var body: some View {
         NavigationStack(path: $router.path) {
+
             // البداية: Splash → EnterPhone
             SplashView { router.go(.enterPhone) }
                 .navigationDestination(for: Route.self) { route in
@@ -53,35 +73,34 @@ struct RootView: View {
                             router.go(.verifyPhone(number: number))
                         }
 
-                    case .verifyPhone:
-                        VerifyNumberView(phoneNumber: "•••") {
-                            // بعد التحقق → التفضيلات أولًا
-                            router.go(.preferences)
+                    case .verifyPhone(let number):
+                        VerifyNumberView(phoneNumber: number) {
+                            user.phone = number
+                            user.save()
+                            router.go(.onboardingProfile)
                         }
 
-                    case .preferences:
-                        PreferencesView(user: user) {
-                            router.go(.askName)
-                        }
-
-                    case .askName:
-                        AskNameView(user: user) {
-                            // بعد الاسم → إلى التبويبات مباشرة (بدون إذن كاميرا الآن)
-                            router.go(.mainTabs)
+                    case .onboardingProfile:
+                        OnboardingProfileView(user: user) {
+                            router.resetTo(.mainTabs) // يمنع الرجوع من الهوم
                         }
 
                     case .cameraPermission:
-                        CameraPermissionView(camera: camera)
-                            .onChange(of: camera.isAuthorized) { ok in
-                                if ok { router.go(.moodDetection) }
-                            }
-                            .onAppear {
-                                camera.isAuthorized = AVCaptureDevice.authorizationStatus(for: .video) == .authorized
-                            }
+                        CameraPermissionView(
+                            camera: camera,
+                            onSkip: { router.resetTo(.mainTabs) } // Not Now → الهوم
+                        )
+                        .onChange(of: camera.isAuthorized) { ok in
+                            if ok { router.go(.moodDetection) }
+                        }
+                        .onAppear {
+                            camera.isAuthorized =
+                              AVCaptureDevice.authorizationStatus(for: .video) == .authorized
+                        }
 
                     case .moodDetection:
+                        // تأكدي أن MoodDetectionView عندك يدعم onDone
                         MoodDetectionView(camera: camera) {
-                            // بعد الانتهاء نحفظ المود ونفتح البلاي ليست
                             let mood = camera.moodText.isEmpty ? "Happy" : camera.moodText
                             user.lastMood = mood
                             user.save()
@@ -93,12 +112,11 @@ struct RootView: View {
                         MainTabView(
                             user: user,
                             openPlaylist: { mood in router.go(.playlist(mood: mood)) },
-                            startMoodDetection: {
-                                // من الهوم: نطلب إذن كاميرا أولًا
-                                router.go(.cameraPermission)
-                            },
+                            startMoodDetection: { router.go(.cameraPermission) },
                             openProfile: { router.go(.profile) }
                         )
+                        .navigationBarBackButtonHidden(true)
+                        .toolbar(.hidden, for: .navigationBar)
 
                     case .playlist(let mood):
                         PlaylistView(
@@ -109,7 +127,8 @@ struct RootView: View {
                                 .init(title: "Walking on Sunshine", artist: "Katrina & The Waves", duration: "3:43")
                             ],
                             openSpotify: {
-                                if let url = URL(string: "https://open.spotify.com/playlist/37i9dQZF1DXdPec7aLTmlC") {
+                                if let url = URL(string:
+                                   "https://open.spotify.com/playlist/37i9dQZF1DXdPec7aLTmlC") {
                                     UIApplication.shared.open(url)
                                 }
                             }
@@ -120,15 +139,12 @@ struct RootView: View {
 
                     case .profile:
                         ProfileView(
-                            openPreferences: { router.go(.preferences) },
-                            openMusicPrefs: { router.go(.settings) },
+                            user: user,
+                            openPreferences: { router.go(.onboardingProfile) },
+                            openMusicPrefs: { router.go(.onboardingProfile) },
                             onLogout: {
-                                user.name = ""
-                                user.genres.removeAll()
-                                user.activities.removeAll()
-                                user.lastMood = ""
-                                user.save()
-                                router.popToRoot()
+                                user.clear()
+                                router.resetTo(.enterPhone) // يرجّع شاشة تسجيل الدخول
                             }
                         )
                     }
@@ -138,46 +154,31 @@ struct RootView: View {
     }
 }
 
-
-
-import SwiftUI
-
-/// شاشة إعدادات بسيطة مؤقتة.
-/// تقدرون توسعونها لاحقًا. فيها زر يفتح شاشة التفضيلات.
+// MARK: - (اختياري) Placeholder بسيط للإعدادات
 struct SettingsPlaceholder: View {
     @EnvironmentObject var router: AppRouter
-    @AppStorage("isDarkMode") private var isDarkMode = false
-    @State private var notifications = true
 
     var body: some View {
         ZStack {
             ScreenBackground()
+            VStack(spacing: 16) {
+                Text("Settings")
+                    .font(.title2.bold())
+                    .foregroundStyle(Brand.textPrimary)
 
-            List {
-                Section("Appearance") {
-                    Toggle("Dark Mode", isOn: $isDarkMode)
-                        .tint(Brand.primary)
-                }
-
-                Section("Notifications") {
-                    Toggle("Enable notifications", isOn: $notifications)
-                        .tint(Brand.primary)
-                }
-
-                Section("Preferences") {
-                    Button {
-                        router.go(.preferences)   // يفتح شاشة تفضيلات المستخدم
-                    } label: {
-                        HStack {
-                            Image(systemName: "slider.horizontal.3")
-                                .foregroundStyle(Brand.primary)
-                            Text("Edit music & podcast preferences")
-                                .foregroundStyle(Brand.textPrimary)
-                        }
-                    }
+                Button {
+                    router.go(.onboardingProfile)
+                } label: {
+                    Text("Edit preferences")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Brand.primary)
+                        .foregroundStyle(.white)
+                        .clipShape(Capsule())
                 }
             }
-            .scrollContentBackground(.hidden)
+            .padding()
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)

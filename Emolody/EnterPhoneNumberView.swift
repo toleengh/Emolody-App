@@ -6,6 +6,8 @@
 //
 import SwiftUI
 
+/// شاشة إدخال رقم الجوال. لا تستخدم NavigationView داخليًا حتى لا نصنع Stack داخل Stack.
+/// بدلًا من NavigationLink، نعطيك onContinue ترسّلين منه الرقم للراوتر.
 struct EnterPhoneNumberView: View {
     @State private var phoneNumber: String = ""
     var onContinue: (String) -> Void
@@ -15,15 +17,15 @@ struct EnterPhoneNumberView: View {
             ScreenBackground()
 
             VStack(spacing: 20) {
-                // الشعار البسيط
+                // الشعار
                 HStack {
                     Text("Emo").foregroundColor(Brand.primary)
-                    + Text("lody").foregroundColor(Brand.textPrimary)
-                    Image(systemName: "music.note")
-                        .foregroundColor(Brand.primary)
+                        .font(.system(size: 34, weight: .bold))
+                    Text("lody").foregroundColor(.black)
+                        .font(.system(size: 34, weight: .bold))
+                    Image(systemName: "music.note").foregroundColor(Brand.primary).font(.system(size: 24))
                 }
-                .font(.system(size: 34, weight: .bold))
-                .padding(.bottom, 24)
+                .padding(.bottom, 40)
 
                 // إدخال رقم الهاتف
                 VStack(alignment: .leading, spacing: 8) {
@@ -53,38 +55,33 @@ struct EnterPhoneNumberView: View {
                 }
                 .disabled(phoneNumber.isEmpty)
 
-                // فواصل
+                // فاصل
                 HStack {
                     Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
-                    Text("or continue with")
-                        .foregroundColor(.gray).font(.subheadline)
+                    Text("or continue with").foregroundColor(.gray).font(.subheadline)
                     Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
                 }
                 .padding(.vertical, 10)
 
-                // زرّان (Placeholder)
-                Button("Continue with Spotify") { }
+                Button("Continue with Spotify") { /* TODO: ربط سبوتيفاي */ }
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.black)
                     .cornerRadius(10)
 
-                Button("Continue with Apple Music") { }
+                Button("Continue with Apple Music") { /* TODO: ربط أبل ميوزك */ }
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.white)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    )
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray.opacity(0.3), lineWidth: 1))
 
                 Spacer()
             }
             .padding()
-            .navigationTitle("Sign in")
-            .navigationBarTitleDisplayMode(.inline)
         }
+        .navigationBarBackButtonHidden(true) // الشكل المطلوب بدون شريط تنقل
+        .navigationTitle("")                 // يبقي العنوان فارغ
     }
 }
