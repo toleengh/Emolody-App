@@ -13,7 +13,7 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            ScreenBackground()
+            AppScreenBackground()
 
             VStack(spacing: 20) {
 

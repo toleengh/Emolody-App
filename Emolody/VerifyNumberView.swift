@@ -23,7 +23,7 @@ struct VerifyNumberView: View {
 
     var body: some View {
         ZStack {
-            ScreenBackground()
+            AppScreenBackground()
 
             VStack(spacing: 24) {
                 Spacer(minLength: 60)

@@ -7,48 +7,35 @@ import SwiftUI
 
 struct MainTabView: View {
     @ObservedObject var user: UserStore
+
+    // نستقبل إغلاقات من RootView
     var openPlaylist: (String) -> Void
     var startMoodDetection: () -> Void
-    var openProfile: () -> Void   // احتياطي لو حبيتي تفتحي شاشة بروفايل منفصلة
+    var openPreferences: () -> Void         // ← بدل openProfile()
+    var logout: () -> Void                  // ← لزر اللوق آوت
 
     var body: some View {
         TabView {
-            // Home
             HomeView(
                 user: user,
                 startMoodDetection: startMoodDetection,
                 openPlaylist: openPlaylist
             )
-            .tabItem {
-                Image(systemName: "house.fill")
-                Text("Home")
-            }
+            .tabItem { Image(systemName: "house.fill"); Text("Home") }
 
-            // Playlists
             PlaylistIndexView(openPlaylist: openPlaylist)
-                .tabItem {
-                    Image(systemName: "music.note.list")
-                    Text("Playlists")
-                }
+                .tabItem { Image(systemName: "music.note.list"); Text("Playlists") }
 
-            // Podcasts
             PodcastsView()
-                .tabItem {
-                    Image(systemName: "mic.fill")
-                    Text("Podcasts")
-                }
+                .tabItem { Image(systemName: "mic.fill"); Text("Podcasts") }
 
-            // Profile (نعرضه مباشرة)
+            // نعرض البروفايل مباشرة
             ProfileView(
-                user: user,                 // ← هنا الصح
-                openPreferences: {},        // بإمكانك لاحقًا تربطيها بـ router.go(.onboardingProfile)
-                openMusicPrefs: {},
-                onLogout: {}                // زر اللوق آوت الحقيقي موجود في شاشة Profile التي تفتح من Route.profile
+                user: user,
+                openPreferences: openPreferences,  // ← يفتح شاشة التفضيلات
+                onLogout: logout                   // ← يربط اللوق آوت الحقيقي
             )
-            .tabItem {
-                Image(systemName: "person.fill")
-                Text("Profile")
-            }
+            .tabItem { Image(systemName: "person.fill"); Text("Profile") }
         }
     }
 }

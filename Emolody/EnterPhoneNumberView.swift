@@ -14,7 +14,7 @@ struct EnterPhoneNumberView: View {
 
     var body: some View {
         ZStack {
-            ScreenBackground()
+            AppScreenBackground()
 
             VStack(spacing: 20) {
                 // الشعار

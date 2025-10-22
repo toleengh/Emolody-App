@@ -12,7 +12,7 @@ struct PlaylistIndexView: View {
 
     var body: some View {
         ZStack {
-            ScreenBackground()
+            AppScreenBackground()
             VStack(spacing: 16) {
                 Text("Playlists")
                     .font(.title2.bold())

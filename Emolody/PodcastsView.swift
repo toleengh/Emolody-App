@@ -54,7 +54,7 @@ struct PodcastsView: View {
 
     var body: some View {
         ZStack {
-            ScreenBackground()
+            AppScreenBackground()
 
             VStack(spacing: 16) {
                 Spacer().frame(height: 12)

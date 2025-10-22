@@ -8,146 +8,113 @@
 //  Emolody
 //
 //  Updated to work with Router + unified styling
-
 import SwiftUI
 
 struct ProfileView: View {
     @ObservedObject var user: UserStore
 
-    // إعدادات
-    @AppStorage("isDarkMode") private var isDarkMode = false
+    var openPreferences: () -> Void = {}
+    var onLogout: () -> Void = {}
 
-    var openPreferences: () -> Void
-    var openMusicPrefs: () -> Void   // نستخدمه لفتح نفس شاشة الإعداد الأولي لو حبيتي
-    var onLogout: () -> Void
-
-    @State private var showPrefsSummary = false
+    @State private var isSpotifyConnected = true
+    @State private var isAppleMusicConnected = false
 
     var body: some View {
-        ZStack {
-            ScreenBackground()
+        NavigationView {
+            ZStack {
+                AppScreenBackground()
 
-            ScrollView {
-                VStack(spacing: 16) {
+                ScrollView {
+                    VStack(spacing: 16) {
 
-                    // بطاقة المستخدم
-                    HStack(alignment: .center, spacing: 12) {
-                        Circle()
-                            .fill(Brand.primary.opacity(0.18))
-                            .frame(width: 60, height: 60)
-                            .overlay(
-                                Image(systemName: "person.fill")
-                                    .font(.system(size: 28))
+                        // بطاقة المستخدم
+                        AppCard {
+                            HStack(spacing: 12) {
+                                Circle()
+                                    .fill(Brand.primary.opacity(0.2))
+                                    .frame(width: 60, height: 60)
+                                    .overlay(
+                                        Image(systemName: "person.fill")
+                                            .font(.system(size: 28, weight: .semibold))
+                                            .foregroundColor(Brand.primary)
+                                    )
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(user.name.isEmpty ? "User" : user.name)
+                                        .font(.headline)
+                                        .foregroundColor(Brand.textPrimary)
+                                    Text(user.phone.isEmpty ? "—" : user.phone)
+                                        .font(.subheadline)
+                                        .foregroundColor(Brand.textSecondary)
+                                }
+                                Spacer()
+                            }
+                        }
+
+                        // التفضيلات
+                        Button(action: openPreferences) {
+                            HStack {
+                                Image(systemName: "slider.horizontal.3")
                                     .foregroundColor(Brand.primary)
-                            )
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(user.name.isEmpty ? "User" : user.name)
-                                .font(.headline)
-                                .foregroundStyle(Brand.textPrimary)
-
-                            Text(user.phone.isEmpty ? "No phone" : user.phone)
-                                .font(.subheadline)
-                                .foregroundStyle(.gray)
-                                .lineLimit(1)
+                                Text("Music & Podcast Preferences")
+                                    .font(.headline)
+                                    .foregroundColor(Brand.textPrimary)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(Brand.textSecondary)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        Spacer()
+                        .appCard()
+
+                        // الحسابات المرتبطة (تنظيم جاهز للتوصيل لاحقاً)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Connected Accounts")
+                                .font(.headline)
+                                .foregroundColor(Brand.textPrimary)
+                                .padding(.horizontal)
+
+                            AppCard {
+                                HStack {
+                                    Image("spotifyLogo")
+                                        .resizable().scaledToFit()
+                                        .frame(width: 30, height: 30)
+                                    Text("Spotify")
+                                        .font(.headline).foregroundColor(Brand.textPrimary)
+                                    Spacer()
+                                    Toggle("", isOn: $isSpotifyConnected).labelsHidden()
+                                }
+                            }
+
+                            AppCard {
+                                HStack {
+                                    Image("appleMusicLogo")
+                                        .resizable().scaledToFit()
+                                        .frame(width: 30, height: 30)
+                                    Text("Apple Music")
+                                        .font(.headline).foregroundColor(Brand.textPrimary)
+                                    Spacer()
+                                    Toggle("", isOn: $isAppleMusicConnected).labelsHidden()
+                                }
+                            }
+                        }
+
+                        // تسجيل الخروج
+                        Button(role: .destructive, action: onLogout) {
+                            HStack {
+                                Image(systemName: "arrow.right.square.fill")
+                                Text("Logout").font(.headline)
+                                Spacer()
+                            }
+                            .foregroundColor(.red)
+                        }
+                        .appCard()
                     }
                     .padding()
-                    .background(Color.white)
-                    .cornerRadius(16)
-                    .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
-
-                    // Dark Mode
-                    HStack {
-                        Text("Dark Mode")
-                            .font(.headline)
-                            .foregroundStyle(Brand.textPrimary)
-                        Spacer()
-                        Toggle("", isOn: $isDarkMode)
-                            .labelsHidden()
-                            .tint(Brand.primary)
-                    }
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(16)
-                    .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
-
-                    // Music & Podcast Preferences
-                    Button {
-                        showPrefsSummary = true   // ← يعرض الملخص
-                    } label: {
-                        HStack {
-                            Image(systemName: "slider.horizontal.3")
-                                .foregroundStyle(Brand.primary)
-                            Text("Music & Podcast Preferences")
-                                .font(.headline)
-                                .foregroundStyle(Brand.textPrimary)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.gray)
-                        }
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(16)
-                        .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
-                    }
-
-                    // Logout
-                    Button(role: .destructive) {
-                        onLogout()     // ← يرجّع لصفحة تسجيل الدخول
-                    } label: {
-                        HStack {
-                            Image(systemName: "arrow.right.square.fill")
-                            Text("Logout")
-                                .font(.headline)
-                            Spacer()
-                        }
-                        .foregroundColor(.red)
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(16)
-                        .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
-                    }
-                }
-                .padding()
-            }
-        }
-        .navigationTitle("Profile")
-        .sheet(isPresented: $showPrefsSummary) {
-            PreferencesSummarySheet(user: user)
-                .presentationDetents([.medium, .large])
-        }
-    }
-}
-
-// ملخّص التفضيلات في ورقة (sheet)
-private struct PreferencesSummarySheet: View {
-    @ObservedObject var user: UserStore
-
-    var body: some View {
-        NavigationStack {
-            List {
-                if !user.genres.isEmpty {
-                    Section("Favorite genres") {
-                        ForEach(Array(user.genres.sorted()), id: \.self) { g in
-                            Text(g)
-                        }
-                    }
-                }
-                if !user.activities.isEmpty {
-                    Section("Activities") {
-                        ForEach(Array(user.activities.sorted()), id: \.self) { a in
-                            Text(a)
-                        }
-                    }
-                }
-                if user.genres.isEmpty && user.activities.isEmpty {
-                    Text("No preferences selected yet.")
-                        .foregroundStyle(.gray)
                 }
             }
-            .navigationTitle("Your preferences")
+            .navigationTitle("Profile")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }

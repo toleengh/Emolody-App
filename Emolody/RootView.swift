@@ -113,22 +113,26 @@ struct RootView: View {
                             user: user,
                             openPlaylist: { mood in router.go(.playlist(mood: mood)) },
                             startMoodDetection: { router.go(.cameraPermission) },
-                            openProfile: { router.go(.profile) }
+                            openPreferences: { router.go(.onboardingProfile) },   // ✅ يفتح تفضيلات
+                            logout: {
+                                user.clear()
+                                router.resetTo(.enterPhone)                       // ✅ يرجع صفحة الدخول
+                            }
                         )
                         .navigationBarBackButtonHidden(true)
                         .toolbar(.hidden, for: .navigationBar)
+                      
 
                     case .playlist(let mood):
                         PlaylistView(
                             moodLabel: mood,
                             songs: [
-                                .init(title: "Happy Together", artist: "The Turtles", duration: "2:56"),
-                                .init(title: "Can't Stop the Feeling", artist: "Justin Timberlake", duration: "3:56"),
-                                .init(title: "Walking on Sunshine", artist: "Katrina & The Waves", duration: "3:43")
+                                SongItem(title: "Happy Together",        artist: "The Turtles",              duration: "2:56"),
+                                SongItem(title: "Can't Stop the Feeling", artist: "Justin Timberlake",        duration: "3:56"),
+                                SongItem(title: "Walking on Sunshine",    artist: "Katrina & The Waves",      duration: "3:43")
                             ],
                             openSpotify: {
-                                if let url = URL(string:
-                                   "https://open.spotify.com/playlist/37i9dQZF1DXdPec7aLTmlC") {
+                                if let url = URL(string: "https://open.spotify.com/playlist/37i9dQZF1DXdPec7aLTmlC") {
                                     UIApplication.shared.open(url)
                                 }
                             }
@@ -139,12 +143,11 @@ struct RootView: View {
 
                     case .profile:
                         ProfileView(
-                            user: user,
-                            openPreferences: { router.go(.onboardingProfile) },
-                            openMusicPrefs: { router.go(.onboardingProfile) },
+                            user: user,                                  // ← مرّري المتغيّر instance مو النوع
+                            openPreferences: { router.go(.onboardingProfile) },  // يفتح التفضيلات
                             onLogout: {
                                 user.clear()
-                                router.resetTo(.enterPhone) // يرجّع شاشة تسجيل الدخول
+                                router.resetTo(.enterPhone)              // يرجع شاشة تسجيل الدخول
                             }
                         )
                     }
@@ -160,7 +163,7 @@ struct SettingsPlaceholder: View {
 
     var body: some View {
         ZStack {
-            ScreenBackground()
+            AppScreenBackground()
             VStack(spacing: 16) {
                 Text("Settings")
                     .font(.title2.bold())

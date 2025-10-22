@@ -10,7 +10,7 @@ struct ProfileIndexView: View {
     var openProfile: () -> Void
     var body: some View {
         ZStack {
-            ScreenBackground()
+            AppScreenBackground()
             VStack(spacing: 16) {
                 Text("Profile")
                     .font(.title2.bold())

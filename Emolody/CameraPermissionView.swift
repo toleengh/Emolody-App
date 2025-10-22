@@ -13,7 +13,7 @@ struct CameraPermissionView: View {
     @State private var showError = false
 
     var body: some View {
-        ZStack { ScreenBackground()
+        ZStack { AppScreenBackground()
             VStack(spacing: 28) {
                 Spacer().frame(height: 36)
 

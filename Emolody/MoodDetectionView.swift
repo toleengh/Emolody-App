@@ -12,7 +12,7 @@ struct MoodDetectionView: View {
 
     var body: some View {
         ZStack {
-            ScreenBackground()
+            AppScreenBackground()
 
             VStack(alignment: .leading, spacing: 18) {
                 Text("Mood Detection")
