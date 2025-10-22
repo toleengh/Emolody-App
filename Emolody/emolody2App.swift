@@ -10,7 +10,6 @@ struct EmolodyApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                .preferredColorScheme(.light) // قفلنا الثيم على الفاتح
-        }
+                .preferredColorScheme(.light)        }
     }
 }
